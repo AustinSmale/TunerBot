@@ -16,8 +16,7 @@ import listeners.UserJoined;
  *         Discord Bot - TunerBot Feb 6th, 2019
  */
 public class Bot {
-	private static Logger logger = LogManager.getLogger();
-
+	private final static Logger logger = LogManager.getLogger();
 
 	public static void main(String[] args) {
 
@@ -30,11 +29,11 @@ public class Bot {
 		// Enable debugging, if no slf4j logger was found
 		FallbackLoggerConfiguration.setDebug(false);
 		
-		// Initialize database
-		DatabaseManager.getInstance(args[1]);
-		
 		// connect bot
 		DiscordApi api = new DiscordApiBuilder().setToken(args[0]).login().join();
+		
+		// Initialize database
+		DatabaseManager.getInstance(args[1], api);
 		
 		logger.info("Successfully Connected as: "+api.getClientId());
 	
