@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
 
+import command.BetCommand;
 import command.Command;
 import command.PingCommand;
 import command.RapsheetCommand;
@@ -29,6 +30,7 @@ public class CommandHandler implements MessageCreateListener {
 		commands.put("verify", new VerifyCommand());
 		commands.put("ping", new PingCommand());
 		commands.put("rapsheet", new RapsheetCommand());
+		commands.put("bet", new BetCommand());
 
 		// for each command in commands
 		// call getAlternativeName and assign to that key
