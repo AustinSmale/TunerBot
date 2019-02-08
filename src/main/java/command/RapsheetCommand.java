@@ -31,13 +31,13 @@ public class RapsheetCommand implements Command {
 		
 		// build warnings string
 		Document temp = (Document) userDB.get("rapsheet");
-		ArrayList<String> warnings = (ArrayList<String>) temp.get("warings");
+		ArrayList<String> warnings = (ArrayList<String>) temp.get("warning");
 		warnings.forEach(w -> { warning += w+"\n";});
 		// build kicks string
-		ArrayList<String> kicks = (ArrayList<String>) temp.get("kicks");
+		ArrayList<String> kicks = (ArrayList<String>) temp.get("kick");
 		kicks.forEach(w -> { kick += w+"\n";});
 		// build bans string
-		ArrayList<String> bans = (ArrayList<String>) temp.get("bans");
+		ArrayList<String> bans = (ArrayList<String>) temp.get("ban");
 		bans.forEach(w -> { ban += w+"\n";});
 		
 		
