@@ -1,7 +1,7 @@
 package database;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -12,7 +12,6 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.entity.user.UserStatus;
 
-import com.google.common.collect.Iterables;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -20,7 +19,7 @@ import com.mongodb.client.MongoCollection;
 public class DatabaseManager {
 	private static DatabaseManager manager = null;
 	private ScheduledExecutorService buttonExecutorService;
-	private MongoCollection<Document> coll;
+	private static MongoCollection<Document> coll;
 	private DiscordApi api;
 	private boolean writeLock;
 
@@ -35,7 +34,7 @@ public class DatabaseManager {
 
 			// start thread to give buttons every 30 mins
 			startThread();
-
+	
 			manager = this;
 		}
 	}
@@ -90,5 +89,9 @@ public class DatabaseManager {
 				new Document("warings", new ArrayList<String>()).append("kicks", new ArrayList<String>()).append("bans",
 						new ArrayList<String>()));
 		coll.insertOne(newUser);
+	}
+	
+	public static int getButtonsForUser(Long id) {
+		return coll.find(new Document("d_id", id)).first().getInteger("buttons");
 	}
 }
