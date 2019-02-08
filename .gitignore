@@ -43,6 +43,6 @@ gradle-app.setting
 
 
 # anything else I missed
-./settings
+.settings/
 .classpath
 .project
