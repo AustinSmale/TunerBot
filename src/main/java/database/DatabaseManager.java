@@ -39,6 +39,9 @@ public class DatabaseManager {
 
 			// start thread to give buttons every 30 mins
 			startThread();
+			
+			addToRapSheet(91167265445117952L, api.getYourself(), "warning", "test warning");
+			System.out.println(getRapSheetForUser(91167265445117952L));
 
 			manager = this;
 		}
@@ -76,13 +79,13 @@ public class DatabaseManager {
 
 	private void addButton(User u, int amount) {
 		// check if user in database
-		Document query = coll.findOneAndDelete(new Document("d_id", u.getId()));
+		Document query = coll.find(new Document("d_id", u.getId())).first();
 		// if they are
 		if (query != null) {
 			Document dbUser = query;
 			int currentButtons = (int) dbUser.get("buttons") + 1;
 			dbUser.replace("buttons", currentButtons);
-			coll.insertOne(dbUser);
+			coll.replaceOne(new Document("d_id", u.getId()), dbUser);
 		}
 		// if not
 		else
@@ -102,17 +105,23 @@ public class DatabaseManager {
 	}
 
 	public void addToRapSheet(Long id, User mod, String type, String reason) {
-		Document user = coll.findOneAndDelete(new Document("d_id", id));
+		Document user = coll.find(new Document("d_id", id)).first();
 		// if not in db, add them
 		if (user == null)
 			user = addNewUser(id);
-		List<String> rapsheet = (List<String>) ((Document) user.get("rapsheet")).get(type);
+		List<String> rapsheet = (List<String>) getRapSheetForUser(id).get(type);
 		String toAdd = dateFormat.format(new Date()) + " - " + mod.getMentionTag() + " - " + reason;
 		rapsheet.add(0, toAdd);
 		Document newRS = (Document) user.get("rapsheet");
 		newRS.replace(type, rapsheet);
 		user.replace("rapsheet", newRS);
 
-		coll.insertOne(user);
+		coll.replaceOne(new Document("d_id", id), user);
+	}
+
+	public Document getRapSheetForUser(Long id) {
+		Document user = coll.find(new Document("d_id", id)).first();
+		Document rapsheet = (Document) user.get("rapsheet");
+		return rapsheet;
 	}
 }
