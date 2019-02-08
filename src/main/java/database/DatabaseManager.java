@@ -1,5 +1,6 @@
 package database;
 
+import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,13 +23,11 @@ public class DatabaseManager {
 			coll = mongo.getDatabase("tuner-bot").getCollection("buttons");
 			// start thread to give buttons every 30 mins
 			startThread();
+			
+			// add temp user
+			addNewUser(91167265445117952L);
 
 			manager = this;
-//			Document test = new Document("_id", "jo").append("buttons", 1);
-//			coll.insertOne(test);
-//			Document test2 = coll.find(new Document("_id", "jo")).first();
-//			test2.replace("buttons", ((int) test2.get("buttons") + 1));
-//			coll.findOneAndReplace(coll.find(new Document("_id", "jo")).first(), test2);
 		}
 	}
 
@@ -39,6 +38,7 @@ public class DatabaseManager {
 		// for debug
 		System.out.println("Gave buttons!");
 	};
+
 	private void startThread() {
 		buttonExecutorService = Executors.newSingleThreadScheduledExecutor();
 		buttonExecutorService.scheduleAtFixedRate(giveButtons, 30, 30, TimeUnit.MINUTES);
@@ -54,5 +54,15 @@ public class DatabaseManager {
 
 	public MongoCollection<Document> getCollection() {
 		return coll;
+	}
+
+	private void addNewUser(Long id) {
+		Document newUser = new Document("_id", id)
+				.append("buttons", 1)
+				.append("rapsheet", 
+						new Document("warings", new ArrayList<String>())
+						.append("kicks", new ArrayList<String>())
+						.append("bans", new ArrayList<String>()));
+		coll.insertOne(newUser);
 	}
 }
