@@ -1,7 +1,11 @@
 package database;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +26,7 @@ public class DatabaseManager {
 	private static MongoCollection<Document> coll;
 	private DiscordApi api;
 	private boolean writeLock;
+	private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	private DatabaseManager(String URI, DiscordApi api) {
 		if (manager == null) {
@@ -34,7 +39,7 @@ public class DatabaseManager {
 
 			// start thread to give buttons every 30 mins
 			startThread();
-	
+
 			manager = this;
 		}
 	}
@@ -42,14 +47,14 @@ public class DatabaseManager {
 	// Task to give buttons
 	Runnable giveButtons = () -> {
 		// find online users that have role verified
-		List<User> onlineUsersList = api.getServerById(91082346962358272L).get().getRolesByNameIgnoreCase("Verified").get(0)
-				.getUsers().stream().filter(u -> u.getDesktopStatus() != UserStatus.OFFLINE)
+		List<User> onlineUsersList = api.getServerById(91082346962358272L).get().getRolesByNameIgnoreCase("Verified")
+				.get(0).getUsers().stream().filter(u -> u.getDesktopStatus() != UserStatus.OFFLINE)
 				.collect(Collectors.toList());
 		// give 1 button to each
 		writeLock = true;
 		onlineUsersList.forEach(u -> addButton(u, 1));
 		writeLock = false;
-		
+
 	};
 
 	private void startThread() {
@@ -84,14 +89,30 @@ public class DatabaseManager {
 			addNewUser(u.getId());
 	}
 
-	private void addNewUser(Long id) {
+	private Document addNewUser(Long id) {
 		Document newUser = new Document("d_id", id).append("buttons", 1).append("rapsheet",
-				new Document("warings", new ArrayList<String>()).append("kicks", new ArrayList<String>()).append("bans",
+				new Document("warning", new ArrayList<String>()).append("kick", new ArrayList<String>()).append("ban",
 						new ArrayList<String>()));
 		coll.insertOne(newUser);
+		return newUser;
 	}
-	
+
 	public static int getButtonsForUser(Long id) {
 		return coll.find(new Document("d_id", id)).first().getInteger("buttons");
+	}
+
+	public void addToRapSheet(Long id, User mod, String type, String reason) {
+		Document user = coll.findOneAndDelete(new Document("d_id", id));
+		// if not in db, add them
+		if (user == null)
+			user = addNewUser(id);
+		List<String> rapsheet = (List<String>) ((Document) user.get("rapsheet")).get(type);
+		String toAdd = dateFormat.format(new Date()) + " - " + mod.getMentionTag() + " - " + reason;
+		rapsheet.add(0, toAdd);
+		Document newRS = (Document) user.get("rapsheet");
+		newRS.replace(type, rapsheet);
+		user.replace("rapsheet", newRS);
+
+		coll.insertOne(user);
 	}
 }
