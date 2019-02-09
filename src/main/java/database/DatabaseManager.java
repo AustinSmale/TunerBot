@@ -39,9 +39,6 @@ public class DatabaseManager {
 
 			// start thread to give buttons every 30 mins
 			startThread();
-			
-			addToRapSheet(91167265445117952L, api.getYourself(), "warning", "test warning");
-			System.out.println(getRapSheetForUser(91167265445117952L));
 
 			manager = this;
 		}
@@ -51,7 +48,7 @@ public class DatabaseManager {
 	Runnable giveButtons = () -> {
 		// find online users that have role verified
 		List<User> onlineUsersList = api.getServerById(91082346962358272L).get().getRolesByNameIgnoreCase("Verified")
-				.get(0).getUsers().stream().filter(u -> u.getDesktopStatus() != UserStatus.OFFLINE)
+				.get(0).getUsers().stream().filter(u -> u.getStatus() != UserStatus.OFFLINE)
 				.collect(Collectors.toList());
 		// give 1 button to each
 		writeLock = true;
@@ -62,7 +59,7 @@ public class DatabaseManager {
 
 	private void startThread() {
 		buttonExecutorService = Executors.newSingleThreadScheduledExecutor();
-		buttonExecutorService.scheduleAtFixedRate(giveButtons, 5, 60, TimeUnit.SECONDS);
+		buttonExecutorService.scheduleAtFixedRate(giveButtons, 0, 30, TimeUnit.MINUTES);
 	}
 
 	public static DatabaseManager getInstance(String URI, DiscordApi api) {
@@ -92,6 +89,18 @@ public class DatabaseManager {
 			addNewUser(u.getId());
 	}
 
+	public static void addButtonsToID(long id, int amount) {
+		// check if user in database
+		Document query = coll.find(new Document("d_id", id)).first();
+		// if they are
+		if (query != null) {
+			Document dbUser = query;
+			int currentButtons = (int) dbUser.get("buttons") + amount;
+			dbUser.replace("buttons", currentButtons);
+			coll.replaceOne(new Document("d_id", id), dbUser);
+		}
+	}
+
 	private Document addNewUser(Long id) {
 		Document newUser = new Document("d_id", id).append("buttons", 1).append("rapsheet",
 				new Document("warning", new ArrayList<String>()).append("kick", new ArrayList<String>()).append("ban",
@@ -101,7 +110,10 @@ public class DatabaseManager {
 	}
 
 	public static int getButtonsForUser(Long id) {
-		return coll.find(new Document("d_id", id)).first().getInteger("buttons");
+		Document user = coll.find(new Document("d_id", id)).first();
+		if(user != null)
+			return user.getInteger("buttons");
+		return 0;
 	}
 
 	public void addToRapSheet(Long id, User mod, String type, String reason) {
